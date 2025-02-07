@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Afacad } from "next/font/google";
 
 import "./globals.css";
+import { TRPCProvider } from "@/trpc/client";
 
 const font = Afacad({
   subsets: ["latin"],
@@ -19,7 +20,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${font.className} antialiased`}>{children}</body>
+      <body className={`${font.className} antialiased`}>
+        <TRPCProvider>{children}</TRPCProvider>
+      </body>
     </html>
   );
 }
