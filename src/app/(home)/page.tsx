@@ -11,9 +11,7 @@ const HomePage = async () => {
       <h1>Home</h1>
       <HydrateClient>
         <Suspense fallback={<p>trpc loading...</p>}>
-          <ErrorBoundary fallback={<p>error loading...</p>}>
-            <ClientPage />
-          </ErrorBoundary>
+          <ClientPage />
         </Suspense>
       </HydrateClient>
     </div>
