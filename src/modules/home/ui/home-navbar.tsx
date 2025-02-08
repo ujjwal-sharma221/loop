@@ -4,10 +4,11 @@ import Link from "next/link";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { SearchBar } from "@/modules/home/ui/search-bar";
 import { TextRoll } from "@/components/ui/text-roll";
+import { UserButton } from "./user-button";
 
 export function HomeNavbar() {
   return (
-    <nav className="fixed left-0 right-0 top-0 z-50 flex h-16 w-full items-center px-2 pr-5">
+    <nav className="fixed left-0 right-0 top-0 z-50 flex h-16 w-full items-center px-2 pr-8">
       <div className="flex w-full items-center justify-between gap-4">
         <div className="flex flex-shrink-0 items-center">
           <SidebarTrigger />
@@ -21,7 +22,7 @@ export function HomeNavbar() {
           </Link>
         </div>
         <SearchBar />
-        <div>User Button</div>
+        <UserButton />
       </div>
     </nav>
   );

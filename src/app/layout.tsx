@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Afacad } from "next/font/google";
+import { Toaster } from "sonner";
 
 import "./globals.css";
 import { TRPCProvider } from "@/trpc/client";
@@ -21,7 +22,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${font.className} antialiased`}>
-        <TRPCProvider>{children}</TRPCProvider>
+        <TRPCProvider>
+          <Toaster closeButton position="top-right" />
+          {children}
+        </TRPCProvider>
       </body>
     </html>
   );
