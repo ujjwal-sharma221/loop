@@ -13,6 +13,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import CenterUnderline from "@/components/fancy/underline-center";
+import { authClient } from "@/lib/auth-client";
 
 const ITEMS = [
   { title: "History", url: "/playlist/history", icon: ClockIcon, auth: true },
@@ -31,6 +32,8 @@ const ITEMS = [
 ];
 
 export function PersonalSection() {
+  const session = authClient.useSession();
+
   return (
     <SidebarGroup>
       <SidebarGroupContent>
@@ -44,9 +47,10 @@ export function PersonalSection() {
               >
                 <Link
                   className="flex items-center gap-4 text-muted-foreground"
-                  href={item.url}
+                  href={item.auth && !session.data?.user ? "/auth" : item.url}
                 >
                   <item.icon />
+
                   <CenterUnderline label={item.title} className="text-base" />
                 </Link>
               </SidebarMenuButton>

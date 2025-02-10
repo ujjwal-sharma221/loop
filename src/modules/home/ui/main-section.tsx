@@ -13,6 +13,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import CenterUnderline from "@/components/fancy/underline-center";
+import { authClient } from "@/lib/auth-client";
 
 const ITEMS = [
   { title: "Home", url: "/", icon: HomeIcon },
@@ -26,6 +27,8 @@ const ITEMS = [
 ];
 
 export function MainSection() {
+  const session = authClient.useSession();
+
   return (
     <SidebarGroup>
       <SidebarGroupContent>
@@ -37,8 +40,10 @@ export function MainSection() {
                 asChild
                 onClick={() => {}}
               >
-                <Link className="flex items-center gap-4" href={item.url}>
-                  <item.icon />
+                <Link
+                  className="flex items-center gap-4"
+                  href={item.auth && !session.data?.user ? "/auth" : item.url}
+                >
                   <CenterUnderline
                     label={item.title}
                     className="text-base font-semibold"
