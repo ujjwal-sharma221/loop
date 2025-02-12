@@ -91,7 +91,7 @@ export function FilterCarousel({
                 onClick={() => onSelect(item.value)}
               >
                 <Badge
-                  variant={value === "null" ? "default" : "secondary"}
+                  variant={value === item.value ? "default" : "secondary"}
                   className="cursor-pointer whitespace-nowrap rounded-lg px-3 py-1 text-sm"
                 >
                   {item.label}
