@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import Link from "next/link";
 
 import { UserIcon } from "@/components/icons/user-icon";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { auth } from "@/lib/auth";
 import CenterUnderline from "@/components/fancy/underline-center";
-import Link from "next/link";
 
 export async function UserButton() {
   const session = await auth.api.getSession({
@@ -51,7 +51,9 @@ export async function UserButton() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>Option 1</DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/studio">Studio</Link>
+          </DropdownMenuItem>
           <DropdownMenuItem>Option 2</DropdownMenuItem>
           <DropdownMenuItem>Option 3</DropdownMenuItem>
         </DropdownMenuGroup>
