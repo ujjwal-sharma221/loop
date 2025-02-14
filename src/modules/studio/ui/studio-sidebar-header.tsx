@@ -6,7 +6,18 @@ import { UserAvatar } from "@/components/user-avatar";
 
 export function StudioSidebarHeader() {
   const session = authClient.useSession();
-  if (!session.data) return null;
+  if (!session.data)
+    return (
+      <SidebarHeader className="flex items-center justify-center pb-4">
+        <div className="flex flex-col items-center">
+          <UserAvatar
+            className="animate-pulse border border-black transition-opacity hover:opacity-80"
+            name=""
+          />
+          <p className="animate-pulse text-muted-foreground">loading</p>
+        </div>
+      </SidebarHeader>
+    );
 
   return (
     <SidebarHeader className="flex items-center justify-center pb-4">

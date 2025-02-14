@@ -1,7 +1,7 @@
+import { relations } from "drizzle-orm";
 import {
   pgTable,
   text,
-  integer,
   timestamp,
   boolean,
   uuid,
@@ -69,3 +69,36 @@ export const categories = pgTable(
   },
   (t) => [uniqueIndex("name_idx").on(t.name)],
 );
+
+export const videos = pgTable("videos", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  title: text("title").notNull(),
+  description: text("description"),
+  userId: text("user_id")
+    .references(() => user.id, { onDelete: "cascade" })
+    .notNull(),
+  categoryId: uuid("category_id").references(() => categories.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const userRelations = relations(user, ({ many }) => ({
+  videos: many(videos),
+}));
+
+export const categoryRelations = relations(categories, ({ many }) => ({
+  videos: many(videos),
+}));
+
+export const videoRelations = relations(videos, ({ one }) => ({
+  user: one(user, {
+    fields: [videos.userId],
+    references: [user.id],
+  }),
+  category: one(categories, {
+    fields: [videos.categoryId],
+    references: [categories.id],
+  }),
+}));
