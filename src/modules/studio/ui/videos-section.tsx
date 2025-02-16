@@ -16,6 +16,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { VideoThumbnail } from "@/modules/videos/ui/video-thumbnail";
+import { snakeCaseToTitle } from "@/lib/utils";
 
 export function VideosSection() {
   return (
@@ -63,9 +65,32 @@ function VideosSectionSuspense() {
                   key={video.id}
                 >
                   <TableRow className="cursor-pointer">
-                    <TableCell>{video.title}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-4">
+                        <div className="relative aspect-video w-36 shrink-0">
+                          <VideoThumbnail
+                            duration={video.duration || 0}
+                            imageUrl={video.thumbnailUrl}
+                            previewUrl={video.previewUrl}
+                            title={video.title}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-y-1 overflow-hidden">
+                          <span className="line-clamp-1 text-sm">
+                            {video.title}
+                          </span>
+                          <span className="line-clamp-1 text-xs text-muted-foreground">
+                            {video.description || "no description"}
+                          </span>
+                        </div>
+                      </div>
+                    </TableCell>
                     <TableCell>visiblity</TableCell>
-                    <TableCell>status</TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        {snakeCaseToTitle(video.muxStatus || "error")}
+                      </div>
+                    </TableCell>
                     <TableCell>date</TableCell>
                     <TableCell>views</TableCell>
                     <TableCell>comments</TableCell>
