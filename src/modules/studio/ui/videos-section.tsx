@@ -3,6 +3,7 @@
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { LoaderCircle } from "lucide-react";
+import { format } from "date-fns";
 import Link from "next/link";
 
 import { DEFAULT_LIMIT } from "@/lib/constants";
@@ -91,7 +92,9 @@ function VideosSectionSuspense() {
                         {snakeCaseToTitle(video.muxStatus || "error")}
                       </div>
                     </TableCell>
-                    <TableCell>date</TableCell>
+                    <TableCell>
+                      {format(new Date(video.createdAt), "d MMM yyyy")}
+                    </TableCell>
                     <TableCell>views</TableCell>
                     <TableCell>comments</TableCell>
                     <TableCell>likes</TableCell>
