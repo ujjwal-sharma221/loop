@@ -42,7 +42,7 @@ export async function UserButton() {
           <UserIcon />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="max-w-64">
+      <DropdownMenuContent align="end" className="max-w-64">
         <DropdownMenuLabel className="flex flex-col">
           <span>{session.user.name}</span>
           <span className="text-xs font-normal text-foreground">
