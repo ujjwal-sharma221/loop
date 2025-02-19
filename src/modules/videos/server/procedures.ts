@@ -1,5 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
+import { z } from "zod";
 
 import { db } from "@/db";
 import { videos, videoUpdateSchema } from "@/db/schema";
@@ -7,6 +8,20 @@ import { mux } from "@/lib/mux";
 import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
 
 export const videosRouter = createTRPCRouter({
+  remove: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const { id: userId } = ctx.userInfo;
+
+      const [removedVideo] = await db
+        .delete(videos)
+        .where(and(eq(videos.id, input.id), eq(videos.userId, userId)))
+        .returning();
+
+      if (!removedVideo) throw new TRPCError({ code: "NOT_FOUND" });
+
+      return removedVideo;
+    }),
   update: protectedProcedure
     .input(videoUpdateSchema)
     .mutation(async ({ ctx, input }) => {
@@ -26,6 +41,8 @@ export const videosRouter = createTRPCRouter({
         .where(and(eq(videos.id, input.id), eq(videos.userId, userId)));
 
       if (!updatedVideo) throw new TRPCError({ code: "NOT_FOUND" });
+
+      return updatedVideo;
     }),
   create: protectedProcedure.mutation(async ({ ctx }) => {
     const { id: userId } = ctx.userInfo;

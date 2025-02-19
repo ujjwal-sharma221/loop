@@ -117,7 +117,7 @@ function VideosSectionSuspense() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>visiblity</TableCell>
+                    <TableCell>{video.visibility}</TableCell>
                     <TableCell>
                       <div className="flex items-center">
                         {snakeCaseToTitle(video.muxStatus || "error")}

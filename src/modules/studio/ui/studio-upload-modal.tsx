@@ -2,6 +2,7 @@
 
 import { LoaderCircle, PlusIcon } from "lucide-react";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/trpc/client";
@@ -9,6 +10,7 @@ import { ResponsiveModal } from "@/components/responsive-modal";
 import { StudioUploader } from "./stuido-uploader";
 
 export function StudioUploadModal() {
+  const router = useRouter();
   const utils = trpc.useUtils();
   const create = trpc.videos.create.useMutation({
     onSuccess: () => {
@@ -21,6 +23,12 @@ export function StudioUploadModal() {
     },
   });
 
+  const onSuccess = () => {
+    if (!create.data?.video.id) return;
+    create.reset();
+    router.push(`/studio/videos/${create.data.video.id}`);
+  };
+
   return (
     <>
       <ResponsiveModal
@@ -29,7 +37,7 @@ export function StudioUploadModal() {
         onOpenChange={() => create.reset()}
       >
         {create.data?.url ? (
-          <StudioUploader endpoint={create.data?.url} onSuccess={() => {}} />
+          <StudioUploader endpoint={create.data?.url} onSuccess={onSuccess} />
         ) : (
           <LoaderCircle />
         )}
