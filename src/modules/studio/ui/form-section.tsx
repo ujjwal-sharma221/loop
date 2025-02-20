@@ -355,6 +355,18 @@ function VideoDropdownMenu({ videoId }: { videoId: string }) {
 
 function ImageDropdownMenu({ videoId }: { videoId: string }) {
   const [thumbnailModalOpen, setThumbnailModalOpen] = useState(false);
+  const utils = trpc.useUtils();
+  const restoreThumbnail = trpc.videos.restoreThumbnail.useMutation({
+    onSuccess: () => {
+      utils.studio.getMany.invalidate();
+      utils.studio.getOne.invalidate({ id: videoId });
+      toast.success("Thumbnail restored");
+    },
+    onError: (err) => {
+      toast.error("something went wrong");
+      console.error(err);
+    },
+  });
 
   return (
     <>
@@ -384,7 +396,9 @@ function ImageDropdownMenu({ videoId }: { videoId: string }) {
             <SparklesIcon className="mr-1 size-4" />
             AI-Generated
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => restoreThumbnail.mutate({ id: videoId })}
+          >
             <RotateCcw className="mr-1 size-4" />
             Restore
           </DropdownMenuItem>
