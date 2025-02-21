@@ -16,7 +16,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import Link from "next/link";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+
 import Image from "next/image";
 
 import { trpc } from "@/trpc/client";
@@ -52,6 +52,7 @@ import { CheckIcon } from "@/components/icons/check-icon";
 import { snakeCaseToTitle } from "@/lib/utils";
 import { THUMBNAIL_FALLBACK } from "@/lib/constants";
 import { ThumbnailUploadModal } from "./thumbnail-upload-modal";
+import { useRouter } from "next/navigation";
 
 interface FormSectionProps {
   videoId: string;
@@ -368,6 +369,18 @@ function ImageDropdownMenu({ videoId }: { videoId: string }) {
     },
   });
 
+  const generateThumbnail = trpc.videos.generateThumbnail.useMutation({
+    onSuccess: () => {
+      toast.success("Background job started,", {
+        description: "This may take some time",
+      });
+    },
+    onError: (err) => {
+      toast.error("something went wrong");
+      console.error(err);
+    },
+  });
+
   return (
     <>
       <ThumbnailUploadModal
@@ -392,7 +405,9 @@ function ImageDropdownMenu({ videoId }: { videoId: string }) {
             <ImagePlusIcon className="mr-1 size-4" />
             Change
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => generateThumbnail.mutate({ id: videoId })}
+          >
             <SparklesIcon className="mr-1 size-4" />
             AI-Generated
           </DropdownMenuItem>

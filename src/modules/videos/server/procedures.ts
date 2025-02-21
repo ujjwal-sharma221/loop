@@ -7,8 +7,22 @@ import { db } from "@/db";
 import { videos, videoUpdateSchema } from "@/db/schema";
 import { mux } from "@/lib/mux";
 import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
+import { workflow } from "@/lib/qstash-workflow";
 
 export const videosRouter = createTRPCRouter({
+  generateThumbnail: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const { id: userId } = ctx.userInfo;
+      const { workflowRunId } = await workflow.trigger({
+        url: `${process.env.UPSTASH_WORKFLOW_URL!}/api/videos/workflows/title`,
+        body: { userId, videoId: input.id },
+        retries: 3,
+      });
+
+      return workflowRunId;
+    }),
+
   restoreThumbnail: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
