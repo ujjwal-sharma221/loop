@@ -1,9 +1,9 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
+import { useRouter } from "next/navigation";
 import {
-  CopyCheck,
   Ellipsis,
   Globe,
   ImagePlusIcon,
@@ -52,7 +52,10 @@ import { CheckIcon } from "@/components/icons/check-icon";
 import { snakeCaseToTitle } from "@/lib/utils";
 import { THUMBNAIL_FALLBACK } from "@/lib/constants";
 import { ThumbnailUploadModal } from "./thumbnail-upload-modal";
-import { useRouter } from "next/navigation";
+import {
+  SquarePenIcon,
+  SquarePenIconHandle,
+} from "@/components/icons/square-pen-icon";
 
 interface FormSectionProps {
   videoId: string;
@@ -88,6 +91,30 @@ function FormSectionSuspense({ videoId }: FormSectionProps) {
     },
   });
 
+  const generateTitle = trpc.videos.generateTitle.useMutation({
+    onSuccess: () => {
+      toast.success("Background job started for title,", {
+        description: "This may take some time",
+      });
+    },
+    onError: (err) => {
+      toast.error("something went wrong");
+      console.error(err);
+    },
+  });
+
+  const generateDescription = trpc.videos.generateDescription.useMutation({
+    onSuccess: () => {
+      toast.success("Background job started for description,", {
+        description: "This may take some time",
+      });
+    },
+    onError: (err) => {
+      toast.error("something went wrong");
+      console.error(err);
+    },
+  });
+
   const form = useForm<z.infer<typeof videoUpdateSchema>>({
     defaultValues: video,
     resolver: zodResolver(videoUpdateSchema),
@@ -109,6 +136,16 @@ function FormSectionSuspense({ videoId }: FormSectionProps) {
       setCopied(false);
     }, 2000);
   };
+
+  const routeIconRef = useRef<SquarePenIconHandle>(null);
+
+  useEffect(() => {
+    if (generateTitle.isPending || generateDescription.isPending) {
+      routeIconRef.current?.startAnimation();
+    } else {
+      routeIconRef.current?.stopAnimation();
+    }
+  }, [generateTitle.isPending, generateDescription.isPending]);
 
   return (
     <>
@@ -135,7 +172,21 @@ function FormSectionSuspense({ videoId }: FormSectionProps) {
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Title</FormLabel>
+                    <FormLabel>
+                      <div className="flex items-center gap-x-2">
+                        Title
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          type="button"
+                          className="size-6 rounded-full [&_svg]:size-3"
+                          onClick={() => generateTitle.mutate({ id: videoId })}
+                          disabled={generateTitle.isPending}
+                        >
+                          <SquarePenIcon ref={routeIconRef} />
+                        </Button>
+                      </div>
+                    </FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -152,7 +203,23 @@ function FormSectionSuspense({ videoId }: FormSectionProps) {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel>
+                      <div className="flex items-center gap-x-2">
+                        Description
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          type="button"
+                          className="size-6 rounded-full [&_svg]:size-3"
+                          onClick={() =>
+                            generateDescription.mutate({ id: videoId })
+                          }
+                          disabled={generateDescription.isPending}
+                        >
+                          <SquarePenIcon ref={routeIconRef} />
+                        </Button>
+                      </div>
+                    </FormLabel>
                     <FormControl>
                       <Textarea
                         {...field}

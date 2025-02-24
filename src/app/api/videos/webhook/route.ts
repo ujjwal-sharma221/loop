@@ -135,6 +135,7 @@ export const POST = async (req: NextRequest) => {
         asset_id: string;
       };
 
+      console.log("TRACK WEBHOOK HIT");
       const assetId = data.asset_id;
       const trackId = data.id;
       const status = data.status;
@@ -147,7 +148,8 @@ export const POST = async (req: NextRequest) => {
           muxTrackId: trackId,
           muxTrackStatus: status,
         })
-        .where(eq(videos.muxUploadId, assetId));
+        .where(eq(videos.muxAssetId, assetId));
+
       break;
     }
   }
