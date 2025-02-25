@@ -2,33 +2,17 @@
 
 import { Suspense, useEffect, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { useRouter } from "next/navigation";
-import {
-  Ellipsis,
-  Globe,
-  ImagePlusIcon,
-  LockIcon,
-  RotateCcw,
-  SparklesIcon,
-  Trash2,
-} from "lucide-react";
+import { Globe, LockIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import Link from "next/link";
 import { toast } from "sonner";
-
 import Image from "next/image";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 import { trpc } from "@/trpc/client";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { videoUpdateSchema } from "@/db/schema";
-import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
   FormControl,
@@ -51,11 +35,12 @@ import { CopyIcon } from "@/components/icons/copy-icon";
 import { CheckIcon } from "@/components/icons/check-icon";
 import { snakeCaseToTitle } from "@/lib/utils";
 import { THUMBNAIL_FALLBACK } from "@/lib/constants";
-import { ThumbnailUploadModal } from "./thumbnail-upload-modal";
 import {
   SquarePenIcon,
   SquarePenIconHandle,
 } from "@/components/icons/square-pen-icon";
+import { VideoDropdownMenu } from "./video-dropdown";
+import { ImageDropdownMenu } from "./image-dropdown";
 
 interface FormSectionProps {
   videoId: string;
@@ -381,111 +366,6 @@ function FormSectionSuspense({ videoId }: FormSectionProps) {
           </div>
         </form>
       </Form>
-    </>
-  );
-}
-
-function VideoDropdownMenu({ videoId }: { videoId: string }) {
-  const router = useRouter();
-  const utils = trpc.useUtils();
-  const remove = trpc.videos.remove.useMutation({
-    onSuccess: () => {
-      utils.studio.getMany.invalidate();
-      toast.success("Video removed");
-      router.push("/studio");
-    },
-    onError: (err) => {
-      toast.error("something went wrong");
-      console.error(err);
-    },
-  });
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          size="icon"
-          variant="ghost"
-          className="rounded-full shadow-none"
-          aria-label="Open edit menu"
-        >
-          <Ellipsis size={16} strokeWidth={2} aria-hidden="true" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => remove.mutate({ id: videoId })}>
-          <Trash2 className="mr-2 size-4" />
-          Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
-function ImageDropdownMenu({ videoId }: { videoId: string }) {
-  const [thumbnailModalOpen, setThumbnailModalOpen] = useState(false);
-  const utils = trpc.useUtils();
-  const restoreThumbnail = trpc.videos.restoreThumbnail.useMutation({
-    onSuccess: () => {
-      utils.studio.getMany.invalidate();
-      utils.studio.getOne.invalidate({ id: videoId });
-      toast.success("Thumbnail restored");
-    },
-    onError: (err) => {
-      toast.error("something went wrong");
-      console.error(err);
-    },
-  });
-
-  const generateThumbnail = trpc.videos.generateThumbnail.useMutation({
-    onSuccess: () => {
-      toast.success("Background job started,", {
-        description: "This may take some time",
-      });
-    },
-    onError: (err) => {
-      toast.error("something went wrong");
-      console.error(err);
-    },
-  });
-
-  return (
-    <>
-      <ThumbnailUploadModal
-        videoId={videoId}
-        open={thumbnailModalOpen}
-        onOpenChange={setThumbnailModalOpen}
-      />
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            className="absolute right-1 top-1 size-7 rounded-full bg-black/50 opacity-100 shadow-none duration-300 hover:bg-black/50 group-hover:opacity-100 md:opacity-0"
-            aria-label="Open edit menu"
-          >
-            <Ellipsis size={16} className="text-white" aria-hidden="true" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" side="right">
-          <DropdownMenuItem onClick={() => setThumbnailModalOpen(true)}>
-            <ImagePlusIcon className="mr-1 size-4" />
-            Change
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => generateThumbnail.mutate({ id: videoId })}
-          >
-            <SparklesIcon className="mr-1 size-4" />
-            AI-Generated
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => restoreThumbnail.mutate({ id: videoId })}
-          >
-            <RotateCcw className="mr-1 size-4" />
-            Restore
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
     </>
   );
 }
