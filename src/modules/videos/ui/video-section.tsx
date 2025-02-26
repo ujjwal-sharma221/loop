@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils";
 import { trpc } from "@/trpc/client";
 import { VideoPlayer } from "@/modules/studio/ui/video-player";
 import { VideoGetOneOutput } from "../types";
-import { WaypointsIcon } from "@/components/icons/waypoint-icon";
 import { Button } from "@/components/ui/button";
 import { XIcon } from "lucide-react";
 import { TextShimmer } from "@/components/ui/text-shimmer";
