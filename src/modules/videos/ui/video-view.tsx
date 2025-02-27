@@ -1,4 +1,6 @@
+import { SuggestionsSection } from "@/modules/videos/ui/suggestions-section";
 import { VideoSection } from "./video-section";
+import { CommentsSection } from "@/modules/videos/ui/comments-section";
 
 export function VideoView({ videoId }: { videoId: string }) {
   return (
@@ -6,6 +8,10 @@ export function VideoView({ videoId }: { videoId: string }) {
       <div className="flex flex-col gap-6 xl:flex-row">
         <div className="min-w-0 flex-1">
           <VideoSection videoId={videoId} />
+          <div className="mt-4 block xl:hidden">
+            <SuggestionsSection />
+            <CommentsSection />
+          </div>
         </div>
       </div>
     </div>

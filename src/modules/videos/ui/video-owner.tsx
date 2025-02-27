@@ -7,6 +7,7 @@ import { UserAvatar } from "@/components/user-avatar";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { SubscriptionButton } from "@/modules/subscriptions/ui/subscription-button";
+import { UserInfo } from "@/modules/users/ui/user-info";
 
 interface VideoOwnerProps {
   user: VideoGetOneOutput["user"];
@@ -15,7 +16,10 @@ interface VideoOwnerProps {
 
 export function VideoOwner({ user, videoId }: VideoOwnerProps) {
   const session = authClient.useSession();
-  const userId = session.data?.user.id;
+  if (!session || !session.data) return null;
+
+  const userId = session.data.user.id;
+  const username = session.data.user.name;
 
   const fadeInVariants = {
     hidden: { opacity: 0 },
@@ -35,9 +39,12 @@ export function VideoOwner({ user, videoId }: VideoOwnerProps) {
       <Link href={`/users/${user.id}`}>
         <div className="flex min-w-0 items-center gap-3">
           <UserAvatar name={user.name} />
-          <span className="line-clamp-1 text-sm text-muted-foreground">
-            0 subs
-          </span>
+          <div className="flex min-w-0 flex-col gap-1">
+            <UserInfo size="lg" name={username} />
+            <span className="line-clamp-1 text-sm text-muted-foreground">
+              0 subs
+            </span>
+          </div>
         </div>
       </Link>
       {userId === user.id ? (
