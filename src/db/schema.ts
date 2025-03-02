@@ -108,12 +108,23 @@ export const videos = pgTable("videos", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const videoInsertSchema = createInsertSchema(videos);
-export const videoUpdateSchema = createUpdateSchema(videos);
-export const videoSelectSchema = createSelectSchema(videos);
+export const videoViews = pgTable("video_views", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id")
+    .references(() => user.id, { onDelete: "cascade" })
+    .notNull(),
+  videoId: uuid("video_id")
+    .references(() => videos.id, {
+      onDelete: "cascade",
+    })
+    .notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
 
 export const userRelations = relations(user, ({ many }) => ({
   videos: many(videos),
+  videoViews: many(videoViews),
 }));
 
 export const categoryRelations = relations(categories, ({ many }) => ({
@@ -130,3 +141,23 @@ export const videoRelations = relations(videos, ({ one }) => ({
     references: [categories.id],
   }),
 }));
+
+export const videoViewRelations = relations(videoViews, ({ one, many }) => ({
+  users: one(user, {
+    fields: [videoViews.userId],
+    references: [user.id],
+  }),
+  videos: one(videos, {
+    fields: [videoViews.videoId],
+    references: [videos.id],
+  }),
+  views: many(videoViews),
+}));
+
+export const videoInsertSchema = createInsertSchema(videos);
+export const videoUpdateSchema = createUpdateSchema(videos);
+export const videoSelectSchema = createSelectSchema(videos);
+
+export const videoViewSchema = createInsertSchema(videoViews);
+export const videoViewUpdateSchema = createUpdateSchema(videoViews);
+export const videoViewSelectSchema = createSelectSchema(videoViews);

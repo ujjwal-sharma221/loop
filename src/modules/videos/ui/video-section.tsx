@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { XIcon } from "lucide-react";
 import { TextShimmer } from "@/components/ui/text-shimmer";
 import { VideoTopRow } from "./video-top-row";
+import { authClient } from "@/lib/auth-client";
 
 interface VideoSectionProps {
   videoId: string;
@@ -27,7 +28,19 @@ export function VideoSection({ videoId }: VideoSectionProps) {
 }
 
 function VideoSectionSuspense({ videoId }: VideoSectionProps) {
+  const session = authClient.useSession();
+  const utils = trpc.useUtils();
+
   const [video] = trpc.videos.getOne.useSuspenseQuery({ id: videoId });
+  const createView = trpc.videoViews.create.useMutation({
+    onSuccess: () => utils.videos.getOne.invalidate({ id: videoId }),
+  });
+
+  const handlePlay = () => {
+    if (!session || !session.data) return;
+
+    createView.mutate({ videoId });
+  };
   return (
     <>
       <div
@@ -38,7 +51,7 @@ function VideoSectionSuspense({ videoId }: VideoSectionProps) {
       >
         <VideoPlayer
           autoPlay
-          onPlay={() => {}}
+          onPlay={handlePlay}
           playbackId={video.muxPlaybackId}
           posterUrl={video.thumbnailUrl}
         />
