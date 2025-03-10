@@ -80,6 +80,11 @@ function VideoReactions({
   likes,
   dislikes,
 }: VideoReactionProps) {
+  const [reaction, setReaction] = useState<"like" | "dislike" | null>(
+    videoReaction,
+  );
+  const [localLikes, setLikes] = useState<number>(likes);
+  const [localDislikes, setDislikes] = useState<number>(dislikes);
   const utils = trpc.useUtils();
 
   const like = trpc.videoReactions.like.useMutation({
@@ -104,10 +109,41 @@ function VideoReactions({
     },
   });
 
+  const handleLike = () => {
+    if (reaction === "like") {
+      setReaction(null);
+      setLikes((prev) => prev - 1);
+      like.mutate({ videoId });
+    } else {
+      if (reaction === "dislike") {
+        setDislikes((prev) => prev - 1);
+      }
+      like.mutate({ videoId });
+      setReaction("like");
+      setLikes((prev) => prev + 1);
+    }
+  };
+
+  const handleDislike = () => {
+    if (reaction === "dislike") {
+      setReaction(null);
+      setDislikes((prev) => prev - 1);
+      dislike.mutate({ videoId });
+    } else {
+      if (reaction === "like") {
+        setLikes((prev) => prev - 1);
+      }
+      dislike.mutate({ videoId });
+      setReaction("dislike");
+      setDislikes((prev) => prev + 1);
+    }
+  };
+
   return (
     <div className="flex flex-none items-center">
       <Button
-        onClick={() => like.mutate({ videoId })}
+        onClick={handleLike}
+        disabled={like.isPending || dislike.isPending}
         className={cn(
           videoReaction === "like" && "bg-zinc-700 text-white",
           "gap-2 rounded-l-full rounded-r-none pr-4 hover:text-primary",
@@ -117,11 +153,12 @@ function VideoReactions({
         <UpvoteIcon
           className={cn("size-5", videoReaction === "like" && "fill-black")}
         />
-        {likes}
+        {localLikes}
       </Button>
       <Separator orientation="vertical" className="h-7" />
       <Button
-        onClick={() => dislike.mutate({ videoId })}
+        onClick={handleDislike}
+        disabled={like.isPending || dislike.isPending}
         className={cn(
           "rounded-l-none rounded-r-full pl-3",
           videoReaction === "dislike" && "bg-zinc-700 text-white",
@@ -129,7 +166,7 @@ function VideoReactions({
         variant="secondary"
       >
         <DownvoteIcon className={cn("size-5")} />
-        {dislikes}
+        {localDislikes}
       </Button>
     </div>
   );
