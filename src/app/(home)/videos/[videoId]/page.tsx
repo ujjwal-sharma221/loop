@@ -9,6 +9,7 @@ const VideoIdPage = async ({ params }: VideoIdPageProps) => {
   const { videoId } = await params;
 
   void trpc.videos.getOne.prefetch({ id: videoId });
+  void trpc.videos.getVideoReaction.prefetch({ id: videoId });
 
   return (
     <HydrateClient>
@@ -16,4 +17,5 @@ const VideoIdPage = async ({ params }: VideoIdPageProps) => {
     </HydrateClient>
   );
 };
+
 export default VideoIdPage;

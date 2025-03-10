@@ -15,6 +15,15 @@ import {
   createUpdateSchema,
 } from "drizzle-zod";
 
+// enums
+export const videoVisibility = pgEnum("video_visibility", [
+  "private",
+  "public",
+]);
+
+export const reactionType = pgEnum("reaction_type", ["like", "dislike"]);
+
+// schema
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
@@ -77,11 +86,6 @@ export const categories = pgTable(
   (t) => [uniqueIndex("name_idx").on(t.name)],
 );
 
-export const videoVisibility = pgEnum("video_visibility", [
-  "private",
-  "public",
-]);
-
 export const videos = pgTable("videos", {
   id: uuid("id").primaryKey().defaultRandom(),
   title: text("title").notNull(),
@@ -122,16 +126,42 @@ export const videoViews = pgTable("video_views", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+export const videoReactions = pgTable(
+  "video_reactions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .references(() => user.id, { onDelete: "cascade" })
+      .notNull(),
+    videoId: uuid("video_id")
+      .references(() => videos.id, {
+        onDelete: "cascade",
+      })
+      .notNull(),
+    type: reactionType("type").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    uniqueReaction: uniqueIndex("video_reactions_video_user_unique").on(
+      table.videoId,
+      table.userId,
+    ),
+  }),
+);
+
+// relations
 export const userRelations = relations(user, ({ many }) => ({
   videos: many(videos),
   videoViews: many(videoViews),
+  videoReactions: many(videoReactions),
 }));
 
 export const categoryRelations = relations(categories, ({ many }) => ({
   videos: many(videos),
 }));
 
-export const videoRelations = relations(videos, ({ one }) => ({
+export const videoRelations = relations(videos, ({ one, many }) => ({
   user: one(user, {
     fields: [videos.userId],
     references: [user.id],
@@ -140,6 +170,8 @@ export const videoRelations = relations(videos, ({ one }) => ({
     fields: [videos.categoryId],
     references: [categories.id],
   }),
+  views: many(videoViews),
+  reactions: many(videoReactions),
 }));
 
 export const videoViewRelations = relations(videoViews, ({ one, many }) => ({
@@ -151,9 +183,23 @@ export const videoViewRelations = relations(videoViews, ({ one, many }) => ({
     fields: [videoViews.videoId],
     references: [videos.id],
   }),
-  views: many(videoViews),
 }));
 
+export const videoReactionRelations = relations(
+  videoReactions,
+  ({ one, many }) => ({
+    users: one(user, {
+      fields: [videoReactions.userId],
+      references: [user.id],
+    }),
+    videos: one(videos, {
+      fields: [videoReactions.videoId],
+      references: [videos.id],
+    }),
+  }),
+);
+
+// types
 export const videoInsertSchema = createInsertSchema(videos);
 export const videoUpdateSchema = createUpdateSchema(videos);
 export const videoSelectSchema = createSelectSchema(videos);
@@ -161,3 +207,7 @@ export const videoSelectSchema = createSelectSchema(videos);
 export const videoViewSchema = createInsertSchema(videoViews);
 export const videoViewUpdateSchema = createUpdateSchema(videoViews);
 export const videoViewSelectSchema = createSelectSchema(videoViews);
+
+export const videoReactionSchema = createInsertSchema(videoReactions);
+export const videoReactionUpdateSchema = createUpdateSchema(videoReactions);
+export const videoReactionSelectSchema = createSelectSchema(videoReactions);

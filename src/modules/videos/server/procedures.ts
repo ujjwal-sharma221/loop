@@ -1,10 +1,16 @@
-import { and, eq, getTableColumns } from "drizzle-orm";
+import { and, eq, getTableColumns, inArray } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { UTApi } from "uploadthing/server";
 
 import { db } from "@/db";
-import { user, videos, videoUpdateSchema, videoViews } from "@/db/schema";
+import {
+  user,
+  videoReactions,
+  videos,
+  videoUpdateSchema,
+  videoViews,
+} from "@/db/schema";
 import { mux } from "@/lib/mux";
 import {
   baseProcedure,
@@ -15,23 +21,79 @@ import { workflow } from "@/lib/qstash-workflow";
 
 export const videosRouter = createTRPCRouter({
   getOne: baseProcedure
-    .input(z.object({ id: z.string() }))
-    .query(async ({ input }) => {
+    .input(z.object({ id: z.string().uuid() }))
+    .query(async ({ input, ctx }) => {
+      const { userId: loggedInUserId } = ctx;
+
+      const [existingUser] = await db
+        .select()
+        .from(user)
+        .where(inArray(user.id, loggedInUserId ? [loggedInUserId] : []));
+
+      let userId;
+      if (existingUser) userId = existingUser.id;
+
+      const viewerReaction = db.$with("viewer_reaction").as(
+        db
+          .select({
+            videoId: videoReactions.videoId,
+            type: videoReactions.type,
+          })
+          .from(videoReactions)
+          .where(inArray(videoReactions.userId, userId ? [userId] : [])),
+      );
+
       const [existingVideo] = await db
+        .with(viewerReaction)
         .select({
           ...getTableColumns(videos),
           user: {
             ...getTableColumns(user),
           },
           viewCount: db.$count(videoViews, eq(videoViews.videoId, videos.id)),
+          likeCount: db.$count(
+            videoReactions,
+            and(
+              eq(videoReactions.videoId, videos.id),
+              eq(videoReactions.type, "like"),
+            ),
+          ),
+          dislikeCount: db.$count(
+            videoReactions,
+            and(
+              eq(videoReactions.videoId, videos.id),
+              eq(videoReactions.type, "dislike"),
+            ),
+          ),
+          viewerReaction: viewerReaction.type,
         })
         .from(videos)
         .innerJoin(user, eq(videos.userId, user.id))
+        .leftJoin(viewerReaction, eq(viewerReaction.videoId, videos.id))
         .where(eq(videos.id, input.id));
 
       if (!existingVideo) throw new TRPCError({ code: "NOT_FOUND" });
 
       return existingVideo;
+    }),
+
+  getVideoReaction: baseProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .query(async ({ input, ctx }) => {
+      const { userId } = ctx;
+      if (!userId) return null;
+
+      const [existingVideoReaction] = await db
+        .select({ reaction: videoReactions.type })
+        .from(videoReactions)
+        .where(
+          and(
+            eq(videoReactions.videoId, input.id),
+            eq(videoReactions.userId, userId),
+          ),
+        );
+
+      return existingVideoReaction ? existingVideoReaction.reaction : null;
     }),
 
   generateDescription: protectedProcedure

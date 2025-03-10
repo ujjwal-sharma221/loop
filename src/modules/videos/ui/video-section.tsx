@@ -32,6 +32,9 @@ function VideoSectionSuspense({ videoId }: VideoSectionProps) {
   const utils = trpc.useUtils();
 
   const [video] = trpc.videos.getOne.useSuspenseQuery({ id: videoId });
+  const [reaction] = trpc.videos.getVideoReaction.useSuspenseQuery({
+    id: videoId,
+  });
   const createView = trpc.videoViews.create.useMutation({
     onSuccess: () => utils.videos.getOne.invalidate({ id: videoId }),
   });
@@ -57,7 +60,7 @@ function VideoSectionSuspense({ videoId }: VideoSectionProps) {
         />
       </div>
       <VideoBanner status={video.muxStatus} />
-      <VideoTopRow video={video} />
+      <VideoTopRow video={video} reaction={reaction} />
     </>
   );
 }

@@ -3,21 +3,24 @@
 import { useMemo, useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { VideoGetOneOutput } from "../types";
+import { VideoGetOneOutput, VideoReaction } from "../types";
 import { VideoOwner } from "./video-owner";
 import { UpvoteIcon } from "@/components/icons/upvote-icon";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { DownvoteIcon } from "@/components/icons/downvote-icon";
 import { VideoMenu } from "./video-menu";
+import { trpc } from "@/trpc/client";
 
 interface VideoTopRowProps {
   video: VideoGetOneOutput;
+  reaction: VideoReaction;
 }
 
-export function VideoTopRow({ video }: VideoTopRowProps) {
+export function VideoTopRow({ video, reaction }: VideoTopRowProps) {
   const compactViews = useMemo(() => {
     return Intl.NumberFormat("en", {
       notation: "compact",
@@ -44,7 +47,12 @@ export function VideoTopRow({ video }: VideoTopRowProps) {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <VideoOwner user={video.user} videoId={video.id} />
         <div className="-mb-2 flex gap-2 overflow-x-auto pb-2 sm:mb-0 sm:min-w-[calc(50%-6px)] sm:justify-end sm:overflow-visible sm:pb-0">
-          <VideoReactions />
+          <VideoReactions
+            videoReaction={reaction}
+            videoId={video.id}
+            likes={video.likeCount}
+            dislikes={video.dislikeCount}
+          />
           <VideoMenu videoId={video.id} variant="secondary" />
         </div>
       </div>
@@ -59,29 +67,69 @@ export function VideoTopRow({ video }: VideoTopRowProps) {
   );
 }
 
-function VideoReactions() {
-  const videoReaction = "like";
+interface VideoReactionProps {
+  videoReaction: VideoReaction;
+  videoId: string;
+  likes: number;
+  dislikes: number;
+}
+
+function VideoReactions({
+  videoReaction,
+  videoId,
+  likes,
+  dislikes,
+}: VideoReactionProps) {
+  const utils = trpc.useUtils();
+
+  const like = trpc.videoReactions.like.useMutation({
+    onSuccess: () => {
+      utils.videos.getVideoReaction.invalidate({ id: videoId });
+      toast.success("Reaction recorded");
+    },
+    onError: (error) => {
+      toast.error(error.message);
+      console.error(error);
+    },
+  });
+
+  const dislike = trpc.videoReactions.dislike.useMutation({
+    onSuccess: () => {
+      utils.videos.getVideoReaction.invalidate({ id: videoId });
+      toast.success("Reaction recorded");
+    },
+    onError: (error) => {
+      toast.error(error.message);
+      console.error(error);
+    },
+  });
 
   return (
     <div className="flex flex-none items-center">
       <Button
-        className="gap-2 rounded-l-full rounded-r-none pr-4"
+        onClick={() => like.mutate({ videoId })}
+        className={cn(
+          videoReaction === "like" && "bg-zinc-700 text-white",
+          "gap-2 rounded-l-full rounded-r-none pr-4 hover:text-primary",
+        )}
         variant="secondary"
       >
         <UpvoteIcon
           className={cn("size-5", videoReaction === "like" && "fill-black")}
         />
-        {1}
+        {likes}
       </Button>
       <Separator orientation="vertical" className="h-7" />
       <Button
-        className="rounded-l-none rounded-r-full pl-3"
+        onClick={() => dislike.mutate({ videoId })}
+        className={cn(
+          "rounded-l-none rounded-r-full pl-3",
+          videoReaction === "dislike" && "bg-zinc-700 text-white",
+        )}
         variant="secondary"
       >
-        <DownvoteIcon
-          className={cn("size-5", videoReaction !== "like" && "fill-black")}
-        />
-        {1}
+        <DownvoteIcon className={cn("size-5")} />
+        {dislikes}
       </Button>
     </div>
   );
