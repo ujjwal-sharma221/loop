@@ -3,6 +3,8 @@
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -22,15 +24,18 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { startTransition } from "react";
+import { authClient } from "@/lib/auth-client";
 
 const loginSchema = z.object({
   email: z.string().email().max(60, { message: "Email length not supported" }),
-  password: z.string().min(50, { message: "Password length not supported" }),
+  password: z.string().min(8, { message: "Password length not supported" }),
 });
 
 export type LoginValues = z.infer<typeof loginSchema>;
 
 export function LoginCard() {
+  const router = useRouter();
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -40,7 +45,22 @@ export function LoginCard() {
   });
 
   function onSubmit(values: LoginValues) {
-    console.log(values);
+    startTransition(async () => {
+      await authClient.signIn.email(
+        {
+          email: values.email,
+          password: values.password,
+        },
+        {
+          onSuccess: () => {
+            router.push("/");
+          },
+          onError: (ctx) => {
+            toast.error(ctx.error.message);
+          },
+        },
+      );
+    });
   }
   return (
     <Sheet>

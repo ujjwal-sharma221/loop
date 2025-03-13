@@ -35,6 +35,9 @@ function VideoSectionSuspense({ videoId }: VideoSectionProps) {
   const [reaction] = trpc.videos.getVideoReaction.useSuspenseQuery({
     id: videoId,
   });
+  const [subscriberCount] =
+    trpc.subscriptions.subscriptionCount.useSuspenseQuery();
+
   const createView = trpc.videoViews.create.useMutation({
     onSuccess: () => utils.videos.getOne.invalidate({ id: videoId }),
   });
@@ -60,7 +63,11 @@ function VideoSectionSuspense({ videoId }: VideoSectionProps) {
         />
       </div>
       <VideoBanner status={video.muxStatus} />
-      <VideoTopRow video={video} reaction={reaction} />
+      <VideoTopRow
+        video={video}
+        reaction={reaction}
+        subscriberCount={subscriberCount}
+      />
     </>
   );
 }

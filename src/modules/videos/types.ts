@@ -8,3 +8,6 @@ export type VideoGetOneOutput =
 export type VideoReaction =
   | inferRouterOutputs<AppRouter>["videos"]["getVideoReaction"]
   | null;
+
+export type subscriberCountValues =
+  inferRouterOutputs<AppRouter>["subscriptions"]["subscriptionCount"];

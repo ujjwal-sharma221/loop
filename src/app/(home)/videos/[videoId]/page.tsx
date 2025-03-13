@@ -10,6 +10,7 @@ const VideoIdPage = async ({ params }: VideoIdPageProps) => {
 
   void trpc.videos.getOne.prefetch({ id: videoId });
   void trpc.videos.getVideoReaction.prefetch({ id: videoId });
+  void trpc.subscriptions.subscriptionCount.prefetch();
 
   return (
     <HydrateClient>

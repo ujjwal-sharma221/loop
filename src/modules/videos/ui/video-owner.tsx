@@ -1,25 +1,36 @@
 import Link from "next/link";
-import { ArrowRightIcon, ChevronRightIcon } from "lucide-react";
-import { motion } from "motion/react";
+import { ArrowRightIcon } from "lucide-react";
 
-import { VideoGetOneOutput } from "../types";
+import { subscriberCountValues, VideoGetOneOutput } from "../types";
 import { UserAvatar } from "@/components/user-avatar";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { SubscriptionButton } from "@/modules/subscriptions/ui/subscription-button";
 import { UserInfo } from "@/modules/users/ui/user-info";
+import { useSubscription } from "@/hooks/use-subscription";
 
 interface VideoOwnerProps {
   user: VideoGetOneOutput["user"];
+  subscriberCount: subscriberCountValues;
   videoId: string;
 }
 
-export function VideoOwner({ user, videoId }: VideoOwnerProps) {
+export function VideoOwner({
+  user,
+  videoId,
+  subscriberCount,
+}: VideoOwnerProps) {
   const session = authClient.useSession();
   if (!session || !session.data) return null;
 
   const userId = session.data.user.id;
   const username = session.data.user.name;
+
+  const { isPending, onClick } = useSubscription({
+    userId: user.id,
+    isSubscribed: user.viewerSubscribed,
+    fromVideoId: videoId,
+  });
 
   const fadeInVariants = {
     hidden: { opacity: 0 },
@@ -42,7 +53,7 @@ export function VideoOwner({ user, videoId }: VideoOwnerProps) {
           <div className="flex min-w-0 flex-col gap-1">
             <UserInfo size="lg" name={username} />
             <span className="line-clamp-1 text-sm text-muted-foreground">
-              0 subs
+              {subscriberCount} subs
             </span>
           </div>
         </div>
@@ -61,9 +72,9 @@ export function VideoOwner({ user, videoId }: VideoOwnerProps) {
         </Button>
       ) : (
         <SubscriptionButton
-          onClick={() => {}}
-          disabled={false}
-          isSubscribed={false}
+          onClick={onClick}
+          disabled={isPending}
+          isSubscribed={user.viewerSubscribed}
           className="flex-none"
         />
       )}

@@ -8,6 +8,7 @@ import {
   uniqueIndex,
   integer,
   pgEnum,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 import {
   createInsertSchema,
@@ -150,11 +151,41 @@ export const videoReactions = pgTable(
   }),
 );
 
+export const subscriptions = pgTable(
+  "subscriptions",
+  {
+    viewerId: text("viewer_id")
+      .references(() => user.id, {
+        onDelete: "cascade",
+      })
+      .notNull(),
+    creatorId: text("creator_id")
+      .references(() => user.id, {
+        onDelete: "cascade",
+      })
+      .notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    primaryKey({
+      name: "subscription_pk",
+      columns: [t.viewerId, t.creatorId],
+    }),
+  ],
+);
+
 // relations
 export const userRelations = relations(user, ({ many }) => ({
   videos: many(videos),
   videoViews: many(videoViews),
   videoReactions: many(videoReactions),
+  subscriptions: many(subscriptions, {
+    relationName: "subscription_viewer_id_fk",
+  }),
+  subscribers: many(subscriptions, {
+    relationName: "subscription_creator_id_fk",
+  }),
 }));
 
 export const categoryRelations = relations(categories, ({ many }) => ({
@@ -198,6 +229,19 @@ export const videoReactionRelations = relations(
     }),
   }),
 );
+
+export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
+  viewerId: one(user, {
+    fields: [subscriptions.viewerId],
+    references: [user.id],
+    relationName: "subscription_viewer_id_fk",
+  }),
+  creatorId: one(user, {
+    fields: [subscriptions.creatorId],
+    references: [user.id],
+    relationName: "subscription_creator_id_fk",
+  }),
+}));
 
 // types
 export const videoInsertSchema = createInsertSchema(videos);

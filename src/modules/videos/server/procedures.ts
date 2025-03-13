@@ -1,10 +1,11 @@
-import { and, eq, getTableColumns, inArray } from "drizzle-orm";
+import { and, eq, getTableColumns, inArray, isNotNull } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { UTApi } from "uploadthing/server";
 
 import { db } from "@/db";
 import {
+  subscriptions,
   user,
   videoReactions,
   videos,
@@ -23,32 +24,24 @@ export const videosRouter = createTRPCRouter({
   getOne: baseProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
-      const { userId: loggedInUserId } = ctx;
+      const { userId } = ctx;
 
-      const [existingUser] = await db
-        .select()
-        .from(user)
-        .where(inArray(user.id, loggedInUserId ? [loggedInUserId] : []));
-
-      let userId;
-      if (existingUser) userId = existingUser.id;
-
-      const viewerReaction = db.$with("viewer_reaction").as(
+      const viewerSubscriptions = db.$with("viewer_subscriptions").as(
         db
-          .select({
-            videoId: videoReactions.videoId,
-            type: videoReactions.type,
-          })
-          .from(videoReactions)
-          .where(inArray(videoReactions.userId, userId ? [userId] : [])),
+          .select()
+          .from(subscriptions)
+          .where(inArray(subscriptions.viewerId, userId ? [userId] : [])),
       );
 
       const [existingVideo] = await db
-        .with(viewerReaction)
+        .with(viewerSubscriptions)
         .select({
           ...getTableColumns(videos),
           user: {
             ...getTableColumns(user),
+            viewerSubscribed: isNotNull(viewerSubscriptions.viewerId).mapWith(
+              Boolean,
+            ),
           },
           viewCount: db.$count(videoViews, eq(videoViews.videoId, videos.id)),
           likeCount: db.$count(
@@ -65,11 +58,13 @@ export const videosRouter = createTRPCRouter({
               eq(videoReactions.type, "dislike"),
             ),
           ),
-          viewerReaction: viewerReaction.type,
         })
         .from(videos)
         .innerJoin(user, eq(videos.userId, user.id))
-        .leftJoin(viewerReaction, eq(viewerReaction.videoId, videos.id))
+        .leftJoin(
+          viewerSubscriptions,
+          eq(viewerSubscriptions.creatorId, user.id),
+        )
         .where(eq(videos.id, input.id));
 
       if (!existingVideo) throw new TRPCError({ code: "NOT_FOUND" });

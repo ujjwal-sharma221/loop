@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Albert_Sans } from "next/font/google";
+import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
 
 import "./globals.css";
 import { TRPCProvider } from "@/trpc/client";
 
-const font = Albert_Sans({
+const font = Inter({
   subsets: ["latin"],
 });
 
