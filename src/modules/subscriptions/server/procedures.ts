@@ -49,7 +49,6 @@ export const subscriptionsRouter = createTRPCRouter({
       if (!userId)
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "User must be logged in to check subscription status",
         });
 
       const results = await db

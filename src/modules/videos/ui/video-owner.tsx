@@ -8,15 +8,18 @@ import { Button } from "@/components/ui/button";
 import { SubscriptionButton } from "@/modules/subscriptions/ui/subscription-button";
 import { UserInfo } from "@/modules/users/ui/user-info";
 import { useSubscription } from "@/hooks/use-subscription";
+import { trpc } from "@/trpc/client";
 
 interface VideoOwnerProps {
   user: VideoGetOneOutput["user"];
   subscriberCount: subscriberCountValues;
   videoId: string;
+  isSubscribed: boolean;
 }
 
 export function VideoOwner({
   user,
+  isSubscribed,
   videoId,
   subscriberCount,
 }: VideoOwnerProps) {
@@ -28,22 +31,9 @@ export function VideoOwner({
 
   const { isPending, onClick } = useSubscription({
     userId: user.id,
-    isSubscribed: user.viewerSubscribed,
+    isSubscribed: isSubscribed,
     fromVideoId: videoId,
   });
-
-  const fadeInVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { duration: 0.5, staggerChildren: 0.1 },
-    },
-  };
-
-  const wordVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1 },
-  };
 
   return (
     <div className="flex min-w-0 items-center justify-between gap-3 sm:items-start sm:justify-start">
@@ -74,7 +64,7 @@ export function VideoOwner({
         <SubscriptionButton
           onClick={onClick}
           disabled={isPending}
-          isSubscribed={user.viewerSubscribed}
+          isSubscribed={isSubscribed}
           className="flex-none"
         />
       )}

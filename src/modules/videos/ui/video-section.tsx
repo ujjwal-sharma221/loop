@@ -15,19 +15,20 @@ import { authClient } from "@/lib/auth-client";
 
 interface VideoSectionProps {
   videoId: string;
+  creatorId: string;
 }
 
-export function VideoSection({ videoId }: VideoSectionProps) {
+export function VideoSection({ videoId, creatorId }: VideoSectionProps) {
   return (
     <Suspense>
       <ErrorBoundary fallback={<p>error</p>}>
-        <VideoSectionSuspense videoId={videoId} />
+        <VideoSectionSuspense videoId={videoId} creatorId={creatorId} />
       </ErrorBoundary>
     </Suspense>
   );
 }
 
-function VideoSectionSuspense({ videoId }: VideoSectionProps) {
+function VideoSectionSuspense({ videoId, creatorId }: VideoSectionProps) {
   const session = authClient.useSession();
   const utils = trpc.useUtils();
 
@@ -40,6 +41,10 @@ function VideoSectionSuspense({ videoId }: VideoSectionProps) {
 
   const createView = trpc.videoViews.create.useMutation({
     onSuccess: () => utils.videos.getOne.invalidate({ id: videoId }),
+  });
+
+  const [isSubscribed] = trpc.subscriptions.isSubscribed.useSuspenseQuery({
+    creatorId,
   });
 
   const handlePlay = () => {
@@ -64,9 +69,11 @@ function VideoSectionSuspense({ videoId }: VideoSectionProps) {
       </div>
       <VideoBanner status={video.muxStatus} />
       <VideoTopRow
+        isSubscribed={isSubscribed}
         video={video}
         reaction={reaction}
         subscriberCount={subscriberCount}
+        creatorId={creatorId}
       />
     </>
   );

@@ -23,12 +23,16 @@ interface VideoTopRowProps {
   video: VideoGetOneOutput;
   reaction: VideoReaction;
   subscriberCount: subscriberCountValues;
+  creatorId: string;
+  isSubscribed: boolean;
 }
 
 export function VideoTopRow({
   video,
   reaction,
+  creatorId,
   subscriberCount,
+  isSubscribed,
 }: VideoTopRowProps) {
   const compactViews = useMemo(() => {
     return Intl.NumberFormat("en", {
@@ -55,6 +59,7 @@ export function VideoTopRow({
       <h1 className="text-xl font-semibold">{video.title}</h1>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <VideoOwner
+          isSubscribed={isSubscribed}
           subscriberCount={subscriberCount}
           user={video.user}
           videoId={video.id}
